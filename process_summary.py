@@ -3,8 +3,8 @@ import json
 from groq import Groq
 from apify_client import ApifyClient
 import uuid
-import time
 import pandas as pd
+import yaml  # Added for YAML processing
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
@@ -41,8 +41,14 @@ def main():
         tiktok_data = scrape_tiktok(keywords)
         if tiktok_data:
             # Save the data to CSV
-            save_to_csv(tiktok_data, "tiktok_results.csv")
-            print("Data saved to tiktok_results.csv")
+            csv_filename = "tiktok_results.csv"
+            save_to_csv(tiktok_data, csv_filename)
+            print(f"Data saved to {csv_filename}")
+            
+            # Convert CSV to YAML and count tokens
+            yaml_string, token_count = csv_to_yaml_and_count_tokens(csv_filename)
+            print(f"YAML String:\n{yaml_string}")
+            print(f"Token Count: {token_count}")
         else:
             print("No TikTok data found.")
     else:
@@ -121,44 +127,91 @@ def scrape_tiktok(keywords):
 
 def save_to_csv(tiktok_data, filename):
     """
-    Save TikTok data to a CSV file using pandas.
+    Save the entire raw TikTok data to a CSV file using pandas.
     Args:
-        tiktok_data: List of TikTok video data
-        filename: The name of the CSV file to save the data
+        tiktok_data: List of raw TikTok video data
+        filename: The name of the CSV file to save the raw data
     """
-    # Prepare the data to be saved
-    rows = []
+    # Convert the raw data into a pandas DataFrame
+    df = pd.DataFrame(tiktok_data)
 
-    for video in tiktok_data:
-        # Extract author metadata
-        author_meta = video.get('authorMeta', {})
+    # Rename 'id' to 'post_id'
+    if 'id' in df.columns:
+        df.rename(columns={'id': 'post_id'}, inplace=True)
 
-        # Create the data row
-        row = {
-            "request_id": str(uuid.uuid4()),  # Generate a unique request_id for this batch
-            "creator_name": author_meta.get('name', ''),
-            "creator_followers": author_meta.get('fans', ''),
-            "nb_views": video.get('playCount', ''),
-            "nb_likes": video.get('diggCount', 0),
-            "nb_comments": video.get('commentCount', 0),
-            "nb_shares": video.get('shareCount', 0),
-            "nb_bookmarks": video.get('collectCount', 0),
-            "language": video.get('language', ''),
-            "creator_bio": author_meta.get('signature', ''),
-            "creator_private": author_meta.get('privateAccount', False),
-            "creator_total_nb_likes": author_meta.get('heart', ''),
-            "creator_id": author_meta.get('id', ''),
-            "creator_profile_url": author_meta.get('profileUrl', ''),
-            "creator_verified": author_meta.get('verified', False),
-            "creator_total_posts": author_meta.get('video', 0)
+    # Columns to drop
+    columns_to_drop = ['createTime', 'createTimeISO', 'isAd', 'isMuted', 'musicMeta', 'isSlideshow', 'isPinned', 'mediaUrls', 'mentions', 'effectStickers']
+    df = df.drop(columns=[col for col in columns_to_drop if col in df.columns], errors='ignore')
+
+    # Extract and rename keys from 'authorMeta'
+    if 'authorMeta' in df.columns:
+        renamed_columns = {
+            'id': 'user_id',
+            'profileUrl': 'user_profileurl',
+            'signature': 'user_signature',
+            'bioLink': 'user_biolink',
+            'fans': 'user_fans',
+            'heart': 'user_heart',
+            'video': 'user_video',
+            'digg': 'user_digg'
         }
-        rows.append(row)
 
-    # Convert the rows into a pandas DataFrame
-    df = pd.DataFrame(rows)
+        for key, renamed_key in renamed_columns.items():
+            df[renamed_key] = df['authorMeta'].apply(lambda x: x.get(key) if isinstance(x, dict) else None)
+        
+        # Drop the 'authorMeta' column after extraction
+        df.drop(columns=['authorMeta'], inplace=True)
+
+    # Extract 'coverUrl' from 'videoMeta'
+    if 'videoMeta' in df.columns:
+        df['coverUrl'] = df['videoMeta'].apply(lambda x: x.get('coverUrl') if isinstance(x, dict) else None)
+        df.drop(columns=['videoMeta'], inplace=True)
+
+    # Extract and process hashtags
+    if 'hashtags' in df.columns:
+        df['hashtags_post'] = df['hashtags'].apply(
+            lambda x: ', '.join([tag['name'] for tag in x if isinstance(tag, dict)]) if isinstance(x, list) else ''
+        )
+        df.drop(columns=['hashtags'], inplace=True)
+
+    # Fill NaN values with an empty string
+    df.fillna('', inplace=True)
 
     # Save the DataFrame to a CSV file
     df.to_csv(filename, index=False)
+    
+def csv_to_yaml_and_count_tokens(csv_file):
+    """
+    Convert a CSV file to YAML format and count tokens in the YAML string.
+    Args:
+        csv_file: The CSV file to convert
+    Returns:
+        yaml_multiline_string: The YAML string wrapped in triple quotes
+        token_count: The total number of tokens
+    """
+    try:
+        # Read the CSV file into a DataFrame
+        df = pd.read_csv(csv_file)
+        
+        # Convert DataFrame to a list of dictionaries
+        data = df.to_dict(orient='records')
+        
+        # Convert the data to a YAML string
+        yaml_string = yaml.dump(data, default_flow_style=False, sort_keys=False)
+        
+        # Wrap it in triple quotes
+        yaml_multiline_string = f"""\"\"\"\n{yaml_string}\"\"\""""
+
+        with open("output.yaml", 'w') as yaml_file:
+            yaml_file.write(yaml_string)
+        
+        # Count tokens by splitting on whitespace and other delimiters
+        tokens = yaml_string.split()
+        token_count = len(tokens)
+        
+        return yaml_multiline_string, token_count
+    except Exception as e:
+        print(f"An error occurred: {e}")
 
 if __name__ == "__main__":
     main()
