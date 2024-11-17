@@ -3,14 +3,245 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flask App</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <title>Scoutie Chatbot</title>
+    <style>
+        /* General Styles */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(270deg, #4F46E5, #3B82F6, #10B981, #EAB308);
+            background-size: 400% 400%;
+            animation: waveBackground 6s ease-in-out infinite;
+        }
+    
+        @keyframes waveBackground {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+    
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 80px;
+            width: 90%;
+            max-width: 1200px;
+            height: 85%;
+        }
+    
+        /* Left Section */
+        .left-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 5px;
+            background-color: rgba(243, 244, 246, 0); /* Increased transparency */
+            border-radius: 15px;
+            box-shadow: 0px 6px 18px rgba(0, 0, 0, 0);
+            transform: translateX(-30px); /* Move the section to the left */
+        }
+    
+        .left-section img {
+            max-width: 150px;
+            margin-bottom: 20px;
+        }
+    
+        .left-section h2 {
+            font-size: 28px;
+            color: #080e16;
+            margin-bottom: 10px;
+        }
+    
+        .left-section p {
+            font-size: 16px;
+            color: #333;
+            text-align: center;
+            line-height: 1.5;
+        }
+    
+        /* Right Section */
+        .right-section {
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            box-shadow: 0px 6px 18px rgba(0, 0, 0, 0.1);
+        }
+    
+        h1 {
+            font-size: 24px;
+            color: #3B82F6;
+            margin-bottom: 10px;
+        }
+    
+        #chat-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            height: 500px;
+        }
+    
+        #chat-window {
+            flex: 1;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            padding: 10px;
+            overflow-y: auto;
+            background-color: #f9f9f9;
+        }
+    
+        input {
+            flex: 1;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: rgba(255, 255, 255, 0.7);
+        }
+    
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            color: white;
+            background-color: #3B82F6;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+    
+        button:hover {
+            background-color: #2563EB;
+        }
+    
+        .message {
+            margin-bottom: 10px;
+        }
+    
+        .user-message {
+            text-align: right;
+            color: blue;
+        }
+    
+        .bot-message {
+            text-align: left;
+            color: green;
+        }
+    
+        /* Slider Styles */
+        .slider {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            background-color: #121f34;
+            text-align: center;
+            padding: 5px 0;
+        }
+    
+        .slider p {
+            font-size: 16px;
+            color: white;
+            display: inline-block;
+            white-space: nowrap;
+            animation: slideText 10s linear infinite;
+        }
+    
+        @keyframes slideText {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+    </style>
+    
 </head>
 <body>
-    <h1>Flask App</h1>
-    <input type="text" id="textInput" placeholder="Enter text">
-    <button onclick="sendText()">Send</button>
-    <pre id="result"></pre>
-    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <div class="container">
+        <!-- Left Section -->
+        <div class="left-section">
+            <img src="{{ url_for('static', filename='images/logo.webp') }}" alt="Logo">
+            <h2>Scoutie Chatbot</h2>
+            <p>
+                Scoutie helps you connect with TikTok influencers seamlessly.
+                Discover opportunities and streamline collaborations with our AI-powered assistant.
+            </p>
+        </div>
+
+        <!-- Right Section -->
+        <div class="right-section">
+            <h1>Chat with Scoutie</h1>
+            <div id="chat-container">
+                <div id="chat-window">
+                    <div class="message bot-message">
+                        Bot: Hi there! 👋 I'm Scoutie, your friendly AI assistant here to help you connect with TikTok influencers. How can I assist you today?
+                    </div>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="userInput" placeholder="Type your message">
+                    <button onclick="sendMessage()">Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sliding Text -->
+    <div class="slider">
+        <p>Scoutie is your one-stop solution for influencer marketing! ✨ Empower your brand with AI-driven insights and seamless connections. 🚀</p>
+    </div>
+
+    <script>
+        function sendMessage() {
+            const userInput = document.getElementById("userInput");
+            const chatWindow = document.getElementById("chat-window");
+            const message = userInput.value;
+
+            if (message.trim() === "") return;
+
+            const userMessageDiv = document.createElement("div");
+            userMessageDiv.classList.add("message", "user-message");
+            userMessageDiv.textContent = "You: " + message;
+            chatWindow.appendChild(userMessageDiv);
+
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+
+            fetch("/chat", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ message: message })
+            })
+            .then(response => response.json())
+            .then(data => {
+                const botMessageDiv = document.createElement("div");
+                botMessageDiv.classList.add("message", "bot-message");
+                botMessageDiv.textContent = "Bot: " + data.response;
+                chatWindow.appendChild(botMessageDiv);
+
+                chatWindow.scrollTop = chatWindow.scrollHeight;
+
+                if (data.redirect) {
+                    window.location.href = data.redirect;
+                }
+            })
+            .catch(error => console.error("Error:", error));
+
+            userInput.value = "";
+        }
+
+        document.getElementById("userInput").addEventListener("keypress", function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
 </body>
 </html>
