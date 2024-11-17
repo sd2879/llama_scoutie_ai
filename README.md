@@ -5,6 +5,10 @@ Scoutie is a conversational AI-powered assistant designed to connect businesses 
 
 ---
 
+![Project Screenshot](images/Screenshot2.png)
+
+![Project Screenshot](images/Screenshot1.png)
+
 ## **Features**
 
 - **Conversational AI:**  
