@@ -1,13 +1,13 @@
 
 # **Scoutie Chatbot**
 
-Scoutie is a conversational AI-powered assistant designed to connect businesses with TikTok influencers. The project leverages the **Groq API** for keyword generation, the **Apify Client** for TikTok scraping, and processes data into CSV and YAML formats for better insights and reporting.
+Scoutie is a conversational AI-powered assistant designed to connect businesses with TikTok influencers. The project leverages the **LLAMA 3 model** and **Groq API** for keyword generation, the **Apify Client** for TikTok scraping, and processes data into CSV and YAML formats for better insights and reporting.
 
 ---
 
 ![Project Screenshot](images/Screenshot2.png)
 
-![Project Screenshot](images/Screenshot1.png)
+
 
 ## **Features**
 
@@ -28,7 +28,7 @@ Scoutie is a conversational AI-powered assistant designed to connect businesses 
 
 ---
 
-![Project Screenshot](images/Screenshot.png)
+![Project Screenshot](images/Screenshot1.png)
 
 ## **Architecture**
 
@@ -42,6 +42,8 @@ Scoutie employs a robust architecture to seamlessly integrate AI-driven conversa
 6. **Multimodal Analysis**: Leverages advanced AI capabilities for detailed influencer profiling.
 
 ---
+
+![Project Screenshot](images/Screenshot.png)
 
 ## **Folder Structure**
 
