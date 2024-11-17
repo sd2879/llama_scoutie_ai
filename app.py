@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, redirect, url_for
+from flask import Flask, render_template, request, jsonify
 import os
 from dotenv import load_dotenv
 from groq import Groq
@@ -86,15 +86,20 @@ def chat():
         conversation_context["history"].append({"role": "assistant", "content": assistant_reply})
 
         # Check if the conversation has reached its end
-        if user_message.lower() in ["no, that's all", "no", "that's all", "thanks", "thank you"]:
+        if user_message.lower() in ["no, that's all", "no", "that's all", "thanks", "thank you", "ok"]:
             # Generate the final summary
             final_summary = generate_summary(conversation_context["history"])
+            
             # Save the summary to a file
             with open("summary.json", "w") as f:
                 json.dump({"prompt": final_summary}, f)
 
-            # Redirect to the summary page
-            return jsonify({'response': assistant_reply, 'redirect': url_for('summary')})
+            # Append the summary and the button to the assistant's response
+            assistant_reply += (
+                f"\n\nThank you for the information! Here's the summary:\n\n{final_summary}"
+                "\n\nClick the button below to process the summary:\n"
+                '<button onclick="processSummary()">Process Summary</button>'
+            )
 
         # Return the assistant's response
         return jsonify({'response': assistant_reply})
@@ -103,40 +108,23 @@ def chat():
         # Handle errors gracefully
         return jsonify({'response': f"An error occurred: {str(e)}"})
 
+# API endpoint to trigger processing via process_summary.py
+@app.route('/process-summary', methods=['POST'])
+def process_summary():
+    try:
+        # Call the processing script
+        subprocess.call(['python', 'process_summary.py'])
+
+        # Notify the user that processing is complete
+        return jsonify({'response': "The summary has been processed successfully!"})
+    except Exception as e:
+        return jsonify({'response': f"An error occurred during processing: {str(e)}"})
+
 def generate_summary(conversation_history):
     # Extract relevant information from the conversation history
     user_inputs = [entry["content"] for entry in conversation_history if entry["role"] == "user"]
     summary = " ".join(user_inputs)
     return summary
-
-# Route to display the summary and start processing
-@app.route('/summary')
-def summary():
-    # Read the summary from the file
-    with open("summary.json", "r") as f:
-        data = json.load(f)
-    prompt = data.get("prompt", "")
-
-    # You can initiate the processing here or display the summary
-    return render_template('summary.html', prompt=prompt)
-
-# Add this import at the top
-from flask import send_file
-
-# Add this route in app.py
-@app.route('/process', methods=['POST'])
-def process():
-    try:
-        # Call the processing script
-        subprocess.call(['python', 'process_summary.py'])
-
-        # After processing, you can serve the CSV file or inform the user
-        message = "Processing complete. The influencer data has been saved."
-
-        return jsonify({'message': message})
-    except Exception as e:
-        return jsonify({'message': f"An error occurred during processing: {str(e)}"})
-
 
 if __name__ == '__main__':
     app.run(debug=True)

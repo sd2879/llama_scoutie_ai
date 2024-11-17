@@ -18,13 +18,13 @@
             background-size: 400% 400%;
             animation: waveBackground 6s ease-in-out infinite;
         }
-    
+
         @keyframes waveBackground {
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
         }
-    
+
         .container {
             display: flex;
             justify-content: center;
@@ -34,7 +34,7 @@
             max-width: 1200px;
             height: 85%;
         }
-    
+
         /* Left Section */
         .left-section {
             flex: 1;
@@ -43,30 +43,30 @@
             align-items: center;
             justify-content: center;
             padding: 5px;
-            background-color: rgba(243, 244, 246, 0); /* Increased transparency */
+            background-color: rgba(243, 244, 246, 0);
             border-radius: 15px;
             box-shadow: 0px 6px 18px rgba(0, 0, 0, 0);
-            transform: translateX(-30px); /* Move the section to the left */
+            transform: translateX(-30px);
         }
-    
+
         .left-section img {
             max-width: 150px;
             margin-bottom: 20px;
         }
-    
+
         .left-section h2 {
             font-size: 28px;
             color: #080e16;
             margin-bottom: 10px;
         }
-    
+
         .left-section p {
             font-size: 16px;
             color: #333;
             text-align: center;
             line-height: 1.5;
         }
-    
+
         /* Right Section */
         .right-section {
             flex: 2;
@@ -77,20 +77,20 @@
             border-radius: 15px;
             box-shadow: 0px 6px 18px rgba(0, 0, 0, 0.1);
         }
-    
+
         h1 {
             font-size: 24px;
             color: #3B82F6;
             margin-bottom: 10px;
         }
-    
+
         #chat-container {
             display: flex;
             flex-direction: column;
             gap: 10px;
             height: 500px;
         }
-    
+
         #chat-window {
             flex: 1;
             border: 1px solid #ccc;
@@ -99,7 +99,7 @@
             overflow-y: auto;
             background-color: #f9f9f9;
         }
-    
+
         input {
             flex: 1;
             padding: 10px;
@@ -108,7 +108,7 @@
             border-radius: 5px;
             background-color: rgba(255, 255, 255, 0.7);
         }
-    
+
         button {
             padding: 10px 20px;
             font-size: 16px;
@@ -119,25 +119,25 @@
             cursor: pointer;
             transition: background-color 0.3s;
         }
-    
+
         button:hover {
             background-color: #2563EB;
         }
-    
+
         .message {
             margin-bottom: 10px;
         }
-    
+
         .user-message {
             text-align: right;
             color: blue;
         }
-    
+
         .bot-message {
             text-align: left;
             color: green;
         }
-    
+
         /* Slider Styles */
         .slider {
             position: absolute;
@@ -147,7 +147,7 @@
             text-align: center;
             padding: 5px 0;
         }
-    
+
         .slider p {
             font-size: 16px;
             color: white;
@@ -155,13 +155,12 @@
             white-space: nowrap;
             animation: slideText 10s linear infinite;
         }
-    
+
         @keyframes slideText {
             0% { transform: translateX(100%); }
             100% { transform: translateX(-100%); }
         }
     </style>
-    
 </head>
 <body>
     <div class="container">
@@ -181,7 +180,7 @@
             <div id="chat-container">
                 <div id="chat-window">
                     <div class="message bot-message">
-                        Bot: Hi there! 👋 I'm Scoutie, your friendly AI assistant here to help you connect with TikTok influencers. How can I assist you today?
+                        Bot: Hi there! 👋 I'm Scoutie, your friendly AI assistant here to help you connect with content creators for collaborations, promotions, or growing your brand. Whether you're looking for influencers in a specific niche, planning a campaign, or just exploring creative ideas—I've got you covered. Would you like to explore more?
                     </div>
                 </div>
                 <div style="display: flex; gap: 10px;">
@@ -201,40 +200,45 @@
         function sendMessage() {
             const userInput = document.getElementById("userInput");
             const chatWindow = document.getElementById("chat-window");
-            const message = userInput.value;
+            const message = userInput.value.trim();
 
-            if (message.trim() === "") return;
+            if (!message) return;
 
             const userMessageDiv = document.createElement("div");
             userMessageDiv.classList.add("message", "user-message");
             userMessageDiv.textContent = "You: " + message;
             chatWindow.appendChild(userMessageDiv);
 
-            chatWindow.scrollTop = chatWindow.scrollHeight;
-
             fetch("/chat", {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({ message: message })
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ message })
             })
             .then(response => response.json())
             .then(data => {
                 const botMessageDiv = document.createElement("div");
                 botMessageDiv.classList.add("message", "bot-message");
-                botMessageDiv.textContent = "Bot: " + data.response;
+                botMessageDiv.innerHTML = "Bot: " + data.response; // Use innerHTML to render the button
                 chatWindow.appendChild(botMessageDiv);
-
-                chatWindow.scrollTop = chatWindow.scrollHeight;
-
-                if (data.redirect) {
-                    window.location.href = data.redirect;
-                }
+                chatWindow.scrollTop = chatWindow.scrollHeight; // Auto-scroll
             })
-            .catch(error => console.error("Error:", error));
+            .catch(console.error);
 
             userInput.value = "";
+        }
+
+        function processSummary() {
+            fetch("/process-summary", { method: "POST" })
+                .then(response => response.json())
+                .then(data => {
+                    const chatWindow = document.getElementById("chat-window");
+                    const botMessageDiv = document.createElement("div");
+                    botMessageDiv.classList.add("message", "bot-message");
+                    botMessageDiv.textContent = "Bot: " + data.response;
+                    chatWindow.appendChild(botMessageDiv);
+                    chatWindow.scrollTop = chatWindow.scrollHeight;
+                })
+                .catch(error => console.error("Error processing the summary:", error));
         }
 
         document.getElementById("userInput").addEventListener("keypress", function(e) {
