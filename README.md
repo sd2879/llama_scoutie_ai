@@ -30,6 +30,18 @@ Scoutie is a conversational AI-powered assistant designed to connect businesses 
 
 ![Project Screenshot](images/Screenshot.png)
 
+## **Architecture**
+
+Scoutie employs a robust architecture to seamlessly integrate AI-driven conversations with data scraping and processing tools. The architecture includes:
+
+1. **Chatbot Interface**: Built using Flask for real-time user interactions.
+2. **Keyword Generator**: Uses Groq API to extract relevant keywords from user input.
+3. **Scraper Integration**: Utilizes Apify Client for fetching TikTok influencer data.
+4. **Data Processing Module**: Converts raw data into CSV and YAML formats for easier analysis and reporting.
+5. **Influencer Ranking Agent**: Analyzes and ranks influencers based on requirements.
+6. **Multimodal Analysis**: Leverages advanced AI capabilities for detailed influencer profiling.
+
+---
 
 ## **Folder Structure**
 
@@ -76,7 +88,7 @@ cd scoutie
 ```bash
 python -m venv venv
 source venv/bin/activate   # For Linux/macOS
-venv\Scripts\activate      # For Windows
+venv\Scriptsctivate      # For Windows
 ```
 
 ### **4. Install Dependencies**
