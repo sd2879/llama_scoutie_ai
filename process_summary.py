@@ -47,8 +47,8 @@ def main():
             
             # Convert CSV to YAML and count tokens
             yaml_string, token_count = csv_to_yaml_and_count_tokens(csv_filename)
-            print(f"YAML String:\n{yaml_string}")
-            print(f"Token Count: {token_count}")
+            # print(f"YAML String:\n{yaml_string}")
+            # print(f"Token Count: {token_count}")
         else:
             print("No TikTok data found.")
     else:
@@ -105,7 +105,7 @@ def scrape_tiktok(keywords):
     run_input = {
         "excludePinnedPosts": False,
         "maxProfilesPerQuery": 1,
-        "resultsPerPage": 5,
+        "resultsPerPage": 3,
         "searchQueries": keywords,
         "shouldDownloadCovers": False,
         "shouldDownloadSlideshowImages": False,
